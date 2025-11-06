@@ -2,6 +2,7 @@
 import os
 import sys
 import logging
+from argparse import Namespace
 from pathlib import Path
 import numpy as np
 import librosa
@@ -78,7 +79,10 @@ def main():
     )
     parser.add_argument(
         '--audio_path',
-        default='C:\\Users\\indka\\Music\\pons\\c04.mp3',
+         default='C:\\Users\\indka\\Music\\pons\\c05.mp3',
+        # default='C:\\Users\\indka\\Music\\Story-kaspar',
+
+
         help='Path to audio file or directory containing MP3 files'
     )
     parser.add_argument(
@@ -137,12 +141,16 @@ def main():
         logger.info(f"\nProcessing: {audio_file}")
         transcription = app.transcribe(audio_file)
         # write transcription to file
-        audio_name = Path(audio_file).stem
-        output_file = Path(args.output_dir) / f"{audio_name}_transcript.txt"
-        os.makedirs(args.output_dir, exist_ok=True)
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(transcription)
-        logger.info(f"  ✓ Saved to: {output_file}")
+        writeTranscriptionToFile(args, audio_file, transcription)
+
+
+def writeTranscriptionToFile(args: Namespace, audio_file: str, transcription: str):
+    audio_name = Path(audio_file).stem
+    output_file = Path(args.output_dir) / f"{audio_name}_transcript.txt"
+    os.makedirs(args.output_dir, exist_ok=True)
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(transcription)
+    logger.info(f"  ✓ Saved to: {output_file}")
 
 
 if __name__ == "__main__":
