@@ -8,6 +8,9 @@ import numpy as np
 import librosa
 from qai_hub_models.models._shared.hf_whisper.app import HfWhisperApp
 from qai_hub_models.utils.onnx_torch_wrapper import OnnxModelTorchWrapper
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import ID3, USLT, Encoding
+from mutagen.mp3 import MP3
 
 # Configure logging
 logging.basicConfig(
@@ -20,39 +23,18 @@ logger = logging.getLogger(__name__)
 class WhisperTranscriber:
 
     def load_audio(self, audio_path: str) -> np.ndarray:
-        """
-        Load and preprocess audio file
-        
-        Args:
-            audio_path: Path to audio file (MP3, WAV, etc.)
-            
-        Returns:
-            Preprocessed audio array
-        """
         logger.info(f"Loading audio: {audio_path}")
-
         try:
             # Load audio file and resample to 16kHz
             audio, sr = librosa.load(audio_path, sr=self.sample_rate, mono=True)
             logger.info(f"  Duration: {len(audio) / self.sample_rate:.2f}s")
             logger.info(f"  Sample rate: {sr} Hz")
-
             return audio
         except Exception as e:
             logger.error(f"Failed to load audio: {e}")
             raise
 
     def audio_to_mel_spectrogram(self, audio: np.ndarray) -> np.ndarray:
-        """
-        Convert audio to mel spectrogram (Whisper preprocessing)
-        
-        Args:
-            audio: Audio waveform
-            
-        Returns:
-            Mel spectrogram
-        """
-        # Compute mel spectrogram
         mel_spec = librosa.feature.melspectrogram(
             y=audio,
             sr=self.sample_rate,
@@ -79,9 +61,9 @@ def main():
     )
     parser.add_argument(
         '--audio_path',
-         default='C:\\Users\\indka\\Music\\pons\\c05.mp3',
+         # default='C:\\Users\\indka\\Music\\pons\\c06.mp3',
         # default='C:\\Users\\indka\\Music\\Story-kaspar',
-
+        default='C:\\Users\\indka\\Music\\pons',
 
         help='Path to audio file or directory containing MP3 files'
     )
@@ -140,8 +122,8 @@ def main():
     for audio_file in audio_files:
         logger.info(f"\nProcessing: {audio_file}")
         transcription = app.transcribe(audio_file)
-        # write transcription to file
         writeTranscriptionToFile(args, audio_file, transcription)
+        add_lyrics_to_mp3(audio_file, transcription)
 
 
 def writeTranscriptionToFile(args: Namespace, audio_file: str, transcription: str):
@@ -151,6 +133,19 @@ def writeTranscriptionToFile(args: Namespace, audio_file: str, transcription: st
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(transcription)
     logger.info(f"  ✓ Saved to: {output_file}")
+
+
+
+def add_lyrics_to_mp3(mp3_path, lyrics, lang="eng"):
+    # Load the MP3 file
+    audio = MP3(mp3_path, ID3=ID3)
+    if not audio.tags:
+        audio.add_tags()
+    uslt = USLT(encoding=Encoding.UTF8, lang=lang, desc='Lyrics', text=lyrics.strip())
+    audio.tags.add(uslt)
+    audio.save()
+    print(f"Lyrics added successfully to {mp3_path}")
+
 
 
 if __name__ == "__main__":
