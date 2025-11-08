@@ -71,10 +71,17 @@ if __name__ == "__main__":
     GEMINI_MODEL = "google/gemini-2.0-flash-exp:free"
     DEEPSEEK_MODEL = "deepseek/deepseek-chat"
     translate_file(
-        dirOrFilePath = Path("C:\\Users\\indka\\Music\\pons"),
+        dirOrFilePath = Path("C:\\Users\\indka\\Music\\Dresden"),
         model=DEEPSEEK_MODEL
     )
-    
+
+
+
+
+
+
+    deepseek_translate(src, target_lang="de", source_lang="en", informal=False))
+
     # Example: Translate with DeepSeek
     # translate_file(
     #     input_file="german_text.txt",
@@ -82,3 +89,62 @@ if __name__ == "__main__":
     #     model=DEEPSEEK_MODEL
     # )
     
+import os
+import requests
+from typing import Optional
+
+API_KEY = os.getenv("DEEPSEEK_API_KEY", "your_api_key_here")
+BASE_URL = "https://api.deepseek.com/v1"
+
+def deepseek_translate(
+    text: str,
+    target_lang: str,
+    source_lang: Optional[str] = None,
+    informal: bool = False
+) -> str:
+    """
+    Use DeepSeek API to translate text.
+
+    :param text: The text to translate.
+    :param target_lang: Language code you want the output in (e.g., "fr", "de", "ja").
+    :param source_lang: Optional source language code (e.g., "en"). If None, model tries to infer.
+    :param informal: Whether to use informal tone.
+    :return: Translated text.
+    """
+
+    tone = "Use an informal, conversational tone." if informal else "Use a formal, professional tone."
+    source_info = f" from {source_lang}" if source_lang else ""
+    prompt = (f"Translate the following{text}{source_info} into {target_lang}. {tone}\n\n"
+              f"Text:\n{text}\n\n"
+              f"Translated:")
+
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "system", "content": "You are an expert translator."},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 2000,
+        "temperature": 0.2
+    }
+
+    try:
+        response = requests.post(f"{BASE_URL}/chat/completions", headers=headers, json=payload)
+        response.raise_for_status()
+        resp_json = response.json()
+        translated = resp_json["choices"][0]["message"]["content"]
+        return translated.strip()
+    except requests.RequestException as e:
+        # handle request errors
+        print("HTTP error:", e)
+        raise
+    except (KeyError, IndexError) as e:
+        print("Unexpected response format:", response.text)
+        raise
+
+if __name__ == "__main__":
+    src = "Could you please send me the updated report by end of day?"

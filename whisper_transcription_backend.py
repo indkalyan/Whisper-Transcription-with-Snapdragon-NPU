@@ -63,7 +63,7 @@ def main():
         '--audio_path',
          # default='C:\\Users\\indka\\Music\\pons\\c06.mp3',
         # default='C:\\Users\\indka\\Music\\Story-kaspar',
-        default='C:\\Users\\indka\\Music\\pons',
+        default='C:\\Users\\indka\\Music\\Dresden',
 
         help='Path to audio file or directory containing MP3 files'
     )
@@ -79,7 +79,7 @@ def main():
     )
     parser.add_argument(
         '--output-dir',
-        default='C:\\Users\\indka\\Music\\pons',
+        default='C:\\Users\\indka\\Music\\Dresden',
         help='Output directory for transcriptions'
     )
     parser.add_argument(
